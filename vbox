@@ -603,6 +603,10 @@ Usage:
   ${_ME} start  (<name> | <uuid>) [--headless]
   ${_ME} status [(<name> | <uuid>) [--long|-l]]
   ${_ME} stop   (<name> | <uuid>)
+  ${_ME} snapshot  (<name> | <uuid>)
+  ${_ME} snapshot  (<name> | <uuid>) take <snapshot>
+  ${_ME} snapshot  (<name> | <uuid>) delete <snapshot>
+  ${_ME} snapshot  (<name> | <uuid>) restore <snapshot>
   ${_ME} (version | --version)
 
 Global Options:
@@ -1085,6 +1089,47 @@ $(desc --get "stop")
 HEREDOC
 halt() {
   stop "$@"
+}
+
+# ------------------------------------------------------------------------ snapshot
+
+desc "snapshot" <<HEREDOC
+Usage:
+  ${_ME} snapshot (<name> | <uuid>) <action>
+
+Description:
+  Command: \`VBoxManage snapshot <vm> list\`
+  Command: \`VBoxManage snapshot <vm> take <snapshot>\`
+  Command: \`VBoxManage snapshot <vm> delete <snapshot>\`
+  Command: \`VBoxManage snapshot <vm> restore <snapshot>\`
+
+  ilist all the templates a VM has
+HEREDOC
+snapshot() {
+  local id="${1:-}"
+  local action="${2:-}"
+  local snapshot="${3:-}"
+  if [[ -z "${id}" ]]
+  then
+    _die printf "Name or UUID not provided.\\n"
+  fi
+  if [[ -z "${action}" ]]
+  then
+    action='list'
+  fi
+
+  case "${action}" in
+    list)
+      VBoxManage snapshot "${id}" "${action}"
+      ;;
+    take|delete|restore)
+      if [[ -z "${snapshot}" ]]
+      then
+        _die printf "name of snapshot is required in case of deleting or creating snapshot\\n"            
+      fi
+      VBoxManage snapshot "${id}" "${action}" "${snapshot}"
+      ;;
+  esac
 }
 
 ###############################################################################
